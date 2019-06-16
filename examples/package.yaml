@@ -1,0 +1,41 @@
+name:                generics-gadt-examples
+version:             0.1.0.0
+github:              "jcpetruzza/generics-gadt"
+license:             BSD3
+author:              "Daniel Gorin"
+maintainer:          "jcpetruzza@gmail.com"
+copyright:           "2019 Daniel Gorin"
+
+synopsis:            Example usages of generics-gadt
+category:            Generics
+
+
+description:         Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
+
+dependencies:
+- base >= 4.7
+- constraints
+- generics-gadt
+- generic-deriving
+- generic-deriving-exts
+
+default-extensions:
+- ConstraintKinds
+- DataKinds
+- EmptyCase
+- FlexibleContexts
+- FlexibleInstances
+- GADTs
+- LambdaCase
+- PolyKinds
+- TypeFamilies
+- TypeOperators
+
+ghc-options:
+- -O0
+- -Wall
+- -Werror
+
+library:
+  source-dirs: src
+

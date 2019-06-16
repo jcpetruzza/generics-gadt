@@ -1,0 +1,43 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 323bb18ccaeef47d36eac8a724245a8ac5b59f89b2af1d7d435930e2ea17836d
+
+name:           generic-deriving-exts
+version:        0.1.0.0
+synopsis:       Extend generic-deriving with instances for types from generics-gadt
+description:    Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
+category:       Generics
+homepage:       https://github.com/jcpetruzza/generics-gadt#readme
+bug-reports:    https://github.com/jcpetruzza/generics-gadt/issues
+author:         Daniel Gorin
+maintainer:     jcpetruzza@gmail.com
+copyright:      2019 Daniel Gorin
+license:        BSD3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/jcpetruzza/generics-gadt
+
+library
+  exposed-modules:
+      Generics.Deriving.Eq.Exts
+      Generics.Deriving.Exts
+      Generics.Deriving.Monoid.Exts
+      Generics.Deriving.Semigroup.Exts
+      Generics.Deriving.Show.Exts
+  other-modules:
+      Paths_generic_deriving_exts
+  hs-source-dirs:
+      src
+  default-extensions: ConstraintKinds DataKinds EmptyCase FlexibleContexts FlexibleInstances GADTs LambdaCase PolyKinds QuantifiedConstraints TypeFamilies TypeOperators
+  ghc-options: -Wall -Werror
+  build-depends:
+      base >=4.7
+    , generic-deriving
+    , generics-gadt
+  default-language: Haskell2010

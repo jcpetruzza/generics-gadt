@@ -1,0 +1,39 @@
+name:                generic-deriving-exts
+version:             0.1.0.0
+github:              "jcpetruzza/generics-gadt"
+license:             BSD3
+author:              "Daniel Gorin"
+maintainer:          "jcpetruzza@gmail.com"
+copyright:           "2019 Daniel Gorin"
+
+synopsis:            Extend generic-deriving with instances for types from generics-gadt
+category:            Generics
+
+
+description:         Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
+
+dependencies:
+- base >= 4.7
+- generics-gadt
+- generic-deriving
+
+default-extensions:
+- ConstraintKinds
+- DataKinds
+- EmptyCase
+- FlexibleContexts
+- FlexibleInstances
+- GADTs
+- LambdaCase
+- PolyKinds
+- QuantifiedConstraints
+- TypeFamilies
+- TypeOperators
+
+ghc-options:
+- -Wall
+- -Werror
+
+library:
+  source-dirs: src
+

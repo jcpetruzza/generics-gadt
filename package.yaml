@@ -1,0 +1,47 @@
+name:                generics-gadt
+version:             0.0.0.0
+github:              "jcpetruzza/generics-gadt"
+license:             BSD3
+author:              "Daniel Gorin"
+maintainer:          "jcpetruzza@gmail.com"
+copyright:           "2019 Daniel Gorin"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+synopsis:            Extend GHC.Generics with GADTs support (very experimental)
+category:            Generics
+
+
+description:         Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
+
+dependencies:
+- base >= 4.7
+
+default-extensions:
+- ConstraintKinds
+- DataKinds
+- EmptyCase
+- GADTs
+- LambdaCase
+- PolyKinds
+- TypeFamilies
+
+ghc-options:
+- -Wall
+- -Werror
+
+library:
+  source-dirs: src
+
+# tests:
+#   generics-gadt-test:
+#     main:                Spec.hs
+#     source-dirs:         test
+#     ghc-options:
+#     - -threaded
+#     - -rtsopts
+#     - -with-rtsopts=-N
+#     dependencies:
+#     - generics-gadt

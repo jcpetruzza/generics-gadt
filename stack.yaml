@@ -1,0 +1,8 @@
+resolver: lts-13.27
+
+packages:
+- .
+- generic-deriving-exts
+- examples
+
+compiler-check: newer-minor

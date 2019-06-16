@@ -1,0 +1,42 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 913b18af5fe9539e5cde1963f00c05d41ec3855303191d6f7cb417dbc36773a4
+
+name:           generics-gadt
+version:        0.1.0.0
+synopsis:       Extend GHC.Generics with GADTs support (very experimental)
+description:    Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
+category:       Generics
+homepage:       https://github.com/jcpetruzza/generics-gadt#readme
+bug-reports:    https://github.com/jcpetruzza/generics-gadt/issues
+author:         Daniel Gorin
+maintainer:     jcpetruzza@gmail.com
+copyright:      2019 Daniel Gorin
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/jcpetruzza/generics-gadt
+
+library
+  exposed-modules:
+      GHC.Generics.Exts
+      GHC.Generics.Pruning
+  other-modules:
+      Paths_generics_gadt
+  hs-source-dirs:
+      src
+  default-extensions: ConstraintKinds DataKinds EmptyCase GADTs LambdaCase PolyKinds TypeFamilies
+  ghc-options: -Wall -Werror
+  build-depends:
+      base >=4.7
+  default-language: Haskell2010
