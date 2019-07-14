@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 913b18af5fe9539e5cde1963f00c05d41ec3855303191d6f7cb417dbc36773a4
+-- hash: 2f338db04966ea207f32b7befd33375dfe62630904165f83c4368a09f9ae92b2
 
 name:           generics-gadt
-version:        0.1.0.0
+version:        0.0.0.0
 synopsis:       Extend GHC.Generics with GADTs support (very experimental)
 description:    Please see the README on GitHub at <https://github.com/jcpetruzza/generics-gadt#readme>
 category:       Generics
