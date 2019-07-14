@@ -7,7 +7,6 @@ module Generics.Deriving.Show.Exts
 import Generics.Deriving.Show
 
 import GHC.Generics.Exts
-import GHC.Generics.Pruning
 
 instance GShow' t => GShow' (GADT t) where
   gshowsPrec' ty n (GADT t) = gshowsPrec' ty n t

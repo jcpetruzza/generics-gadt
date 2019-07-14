@@ -4,9 +4,7 @@ module Generics.Deriving.Monoid.Exts
   (
   ) where
 
-import Data.Kind(Type)
 import Data.Proxy
-import GHC.Generics
 
 import Generics.Deriving.Monoid
 
