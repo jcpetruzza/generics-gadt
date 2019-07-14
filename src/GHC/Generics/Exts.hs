@@ -3,7 +3,7 @@
 module GHC.Generics.Exts
   (
     (:=>:)(..)
-  , GM1(..), GD1
+  , GM1(..), GD1, GC1
   , G, Ex
   , GEx(..)
   , exists, exists_
@@ -16,7 +16,7 @@ module GHC.Generics.Exts
 where
 
 import Data.Kind ( Constraint, Type )
-import GHC.Generics ( D )
+import GHC.Generics ( C, D )
 import GHC.TypeLits ( Symbol )
 
 
@@ -100,22 +100,25 @@ newtype GM1 (i :: Type) (c :: [Type]) (f :: k -> Type) (p :: k)
   = GM1 { unGM1 :: f p }
   deriving (Read, Show, Eq, Ord) -- XXX missing instances
 
--- | Type synonym for enconding meta-information about a GADT type argument
+-- | Type synonym for enconding meta-information about a GADT type arguments
 type GD1 = GM1 D
+
+-- | Type synonym for enconding meta-information about a GADT constructor type arguments
+type GC1 = GM1 C
+
 
 -- | Existential type
 type Ex free bound
-  = GEx free bound '[] (NoTVars bound) '[]
+  = GEx free bound '[] (NoTVars bound)
 
 -- | GADT constructor
 type G free bound a' a
-  = GEx free bound '[] (TVars bound a' a) a'
+  = GEx free bound '[] (TVars bound a' a)
 
 -- | Generalized existential type
 data GEx
        (free   :: [Type]) (bound  :: [Type])
        (ftvars :: [Type]) (btvars :: [Type])
-       (a :: [Type])
        t x
   where
     QF
@@ -123,42 +126,35 @@ data GEx
       -> GEx
            free   '[]
            ftvars '[]
-           a
            t x
     Ex
       :: GEx
            (n :> (g :: kg) ': free)   bound
            (  ()           ': ftvars) btvars
-           a
            t x
       -> GEx
            free   (V n kg K ': bound)
            ftvars (  ()     ': btvars)
-           a
            t x
   
     ExG
       :: GEx
            (n :> (g :: kg) ': free)   bound
            (Ty   (g :: kg) ': ftvars) btvars
-           a
            t x
       -> GEx
            free   (V n kg K     ': bound)
            ftvars (Ty (g :: kg) ': btvars)
-           a
            t x
 exists
   :: g
   -> GEx
        (n :> g ': free)   bound
        (  ()   ': ftvars) btvars
-       a
        t x
   -> GEx
        free   (V n Type K ': bound)
        ftvars (  ()       ': btvars)
-       a
        t x
 exists _ = Ex
 
@@ -168,12 +164,10 @@ exists_
   -> GEx
        (n :> g ': free)   bound
        (  ()   ': ftvars) btvars
-       a
        t x
   -> GEx
        free   (V n kg K ': bound)
        ftvars (  ()     ': btvars)
-       a
        t x
 exists_ _ = Ex
 
@@ -183,12 +177,10 @@ existsG
   -> GEx
        (n :> g ': free) bound
        (Ty g ': ftvars) btvars
-       a
        t x
   -> GEx
        free (V n Type K ': bound)
        ftvars (Ty g ': btvars)
-       a
        t x
 existsG _ = ExG
 
@@ -198,11 +190,9 @@ existsG_
   -> GEx
        (n :> g ': free) bound
        (Ty g ': ftvars) btvars
-       a
        t x
   -> GEx
        free (V n kg K ': bound)
        ftvars (Ty g ': btvars)
-       a
        t x
 existsG_ _ = ExG

@@ -17,14 +17,14 @@ instance (c => GShow' t) => GShow' (c :=>: t) where
   isNullary (Ct t) = isNullary t
 
 
-instance GShow' (SubstSk free t) => GShow' (GEx free '[] ftvars btvars a t) where
+instance GShow' (SubstSk free t) => GShow' (GEx free '[] ftvars btvars t) where
   gshowsPrec' ty n (QF t) = gshowsPrec' ty n t
   isNullary (QF t) = isNullary t
 
 
 instance
-  (forall (v :: k) ftvars' btvars' . GShow' (GEx (x :> v ': free) bound ftvars' btvars' a t))
-    => GShow' (GEx free (V x k K ': bound) ftvars btvars a t) where
+  (forall (v :: k) ftvars' btvars' . GShow' (GEx (x :> v ': free) bound ftvars' btvars' t))
+    => GShow' (GEx free (V x k K ': bound) ftvars btvars t) where
   gshowsPrec' ty n = \case
     Ex  t -> gshowsPrec' ty n t
     ExG t -> gshowsPrec' ty n t

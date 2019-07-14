@@ -60,6 +60,18 @@ instance GPruning a (K1 r x) where
     gprune  _ = id
     gextend _ = id
 
+instance GPruning a (GEx free bound ftvars btvars t) where
+    type Pruned a (GEx free bound ftvars btvars t) = GEx free bound ftvars btvars t
+
+    gprune  _ = id
+    gextend _ = id
+
+instance GPruning a (c :=>: t) where
+    type Pruned a (c :=>: t) = (c :=>: t)
+
+    gprune  _ = id
+    gextend _ = id
+
 instance GPruning a (l :*: r) where
     type Pruned a (l :*: r) = l :*: r
 
@@ -82,15 +94,13 @@ instance
     gprune  = pruneSummands  (Proxy :: Proxy (ReachableSummands (Pruned a l) (Pruned a r)))
     gextend = extendSummands (Proxy :: Proxy (ReachableSummands (Pruned a l) (Pruned a r)))
 
-instance
-  PruneGExIfNot (Unifies a' a)
-    => GPruning a (GEx free bound ftvars btvars a' t) where
+instance PruneGC1IfNot (Unifies a a_gd1) => GPruning a_gd1 (GC1 a t) where
+    type Pruned a_gd1 (GC1 a t)
+      = PrunedIfNot (Unifies a a_gd1) a t
 
-    type Pruned a (GEx free bound ftvars btvars a' t)
-      = PrunedIfNot (Unifies a' a) free bound ftvars btvars a' t
+    gprune  = pruneGC1  (Proxy :: Proxy (Unifies a a_gd1))
+    gextend = extendGC1 (Proxy :: Proxy (Unifies a a_gd1))
 
-    gprune  = pruneGEx  (Proxy :: Proxy (Unifies a' a))
-    gextend = extendGEx (Proxy :: Proxy (Unifies a' a))
 
 -- ----------------------------------------------------------------------------
 -- Prune metadata
@@ -211,45 +221,40 @@ instance PruneSummands 'BothSummands where
 
 
 -- ----------------------------------------------------------------------------
--- Prune GEx values
+-- Prune GC1 values
 -- ----------------------------------------------------------------------------
 
-class PruneGExIfNot (b :: Bool) where
-  type PrunedIfNot b
-         (free    :: [Type]) (bound  :: [Type])
-         (ftvars  :: [Type]) (btvars :: [Type])
-         (a'      :: [Type])
-         (t :: k -> Type)
-    :: k -> Type
+class PruneGC1IfNot (b :: Bool) where
+  type PrunedIfNot b (a :: [Type]) (t :: k -> Type) :: k -> Type
 
-  pruneGEx
-    :: b ~ Unifies a' a
+  pruneGC1
+    :: b ~ Unifies a a_gd1
     => Proxy b
-    -> Proxy a
-    -> GEx free bound ftvars btvars a' t x
-    -> PrunedIfNot b free bound ftvars btvars a' t x
+    -> Proxy a_gd1
+    -> GC1 a t x
+    -> PrunedIfNot b a t x
 
-  extendGEx
-    :: b ~ Unifies a' a
+  extendGC1
+    :: b ~ Unifies a a_gd1
     => Proxy b
-    -> Proxy a
-    -> PrunedIfNot b free bound ftvars btvars a' t x
-    -> GEx free bound ftvars btvars a' t x
+    -> Proxy a_gd1
+    -> PrunedIfNot b a t x
+    -> GC1 a t x
 
-instance PruneGExIfNot 'True where
-   type PrunedIfNot 'True free bound ftvars btvars a' t
-     = GEx free bound ftvars btvars a' t
+instance PruneGC1IfNot 'True where
+   type PrunedIfNot 'True a t
+     = GC1 a t
 
-   pruneGEx  _ _ = id
-   extendGEx _ _ = id
+   pruneGC1  _ _ = id
+   extendGC1 _ _ = id
 
 
-instance PruneGExIfNot 'False where
-    type PrunedIfNot 'False free bound ftvars btvars a' t
+instance PruneGC1IfNot 'False where
+    type PrunedIfNot 'False a t
       = V1
 
-    pruneGEx  _ _ = error "pruneGEx: impossible, types don't unify"
-    extendGEx _ _ = \case
+    pruneGC1  _ _ = error "pruneGC1: impossible, types don't unify"
+    extendGC1 _ _ = \case
 
 
 -- ----------------------------------------------------------------------------

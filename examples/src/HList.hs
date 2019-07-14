@@ -45,26 +45,30 @@ instance Generic (HList c a) where
         (GD1 '[Ty a]
           (
             (C1 ('MetaCons "HNil" 'PrefixI 'False)
-              (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                (G '["a" :> a, "c" :> c] '[] '[Ty ('[] :: [Type])] '[Ty a]
-                  ('[] ~ (Sk "a" :: [Type]) :=>: U1)
+              (GC1 '[Ty ('[] :: [Type])]
+                (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+                  (G '["a" :> a, "c" :> c] '[] '[Ty ('[] :: [Type])] '[Ty a]
+                    ('[] ~ (Sk "a" :: [Type]) :=>: U1)
+                  )
                 )
               )
             )
           :+:
             (C1 ('MetaCons "HCons" 'PrefixI 'False)
-              (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                (G '["a" :> a, "c" :> c] '[V "t" Type K, V "ts" [Type] K] '[Ty ((Sk "t" :: Type) ': Sk "ts")] '[Ty a]
-                  (
-                    ( ((Sk "t" :: Type) ': Sk "ts") ~ (Sk "a")
-                        :=>:
-                          ( (Sk "c" :: Type -> Constraint) (Sk "t")
-                              :=>: (K1 R (Sk "t") :*: K1 R (HList (Sk "c" :: Type -> Constraint) (Sk "ts")))
-                          )
-                   )
-                 )
-               )
-             )
+              (GC1 '[Ty ((Sk "t" :: Type) ': Sk "ts")]
+                (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+                  (G '["a" :> a, "c" :> c] '[V "t" Type K, V "ts" [Type] K] '[Ty ((Sk "t" :: Type) ': Sk "ts")] '[Ty a]
+                    (
+                      ( ((Sk "t" :: Type) ': Sk "ts") ~ (Sk "a")
+                          :=>:
+                            ( (Sk "c" :: Type -> Constraint) (Sk "t")
+                                :=>: (K1 R (Sk "t") :*: K1 R (HList (Sk "c" :: Type -> Constraint) (Sk "ts")))
+                            )
+                      )
+                    )
+                  )
+                )
+              )
            )
          )
        )
@@ -72,17 +76,17 @@ instance Generic (HList c a) where
 
   from = \case
     HNil
-      -> M1 $ GM1 $ L1 $ M1 $ M1 $ QF $ Ct $ U1
+      -> M1 $ GM1 $ L1 $ M1 $ GM1 $ M1 $ QF $ Ct $ U1
 
     HCons t hts
       ->
         let proxy_ts = snd $ unApply $ pure hts
-        in M1 $ GM1 $ R1 $ M1 $ M1 $
+        in M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
              existsG t $ existsG_ proxy_ts $ QF $ Ct $ Ct $ K1 t :*: K1 hts
 
   to = \case
-    M1 (GM1 (L1 (M1 (M1 (QF (Ct U1)))))) -> HNil
-    M1 (GM1 (R1 (M1 (M1 (ExG (ExG (QF (Ct (Ct (K1 t :*: K1 hts)))))))))) -> HCons t hts
+    M1 (GM1 (L1 (M1 (GM1 (M1 (QF (Ct U1))))))) -> HNil
+    M1 (GM1 (R1 (M1 (GM1 (M1 (ExG (ExG (QF (Ct (Ct (K1 t :*: K1 hts))))))))))) -> HCons t hts
 
 
 unApply :: Proxy (f a) -> (Proxy f, Proxy a)
