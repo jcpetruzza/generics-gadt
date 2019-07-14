@@ -95,23 +95,23 @@ type family NoTVars (bound :: [Type]) :: [Type] where
   NoTVars (_ ': xs) = () ': NoTVars xs
 
 -- | Metadata marking a type as a GADT.
-newtype GADT (f :: k -> Type) (p :: k)
+newtype GADT (a :: [Type]) (f :: k -> Type) (p :: k)
   = GADT (f p)
   deriving (Read, Show, Eq, Ord) -- XXX missing instances
 
 -- | Existential type
 type Ex free bound
-  = GEx free bound '[] (NoTVars bound) '[] '[]
+  = GEx free bound '[] (NoTVars bound) '[]
 
 -- | GADT constructor
-type G free bound refined a
-  = GEx free bound '[] (TVars bound refined a) refined a
+type G free bound a' a
+  = GEx free bound '[] (TVars bound a' a) a'
 
 -- | Generalized existential type
 data GEx
        (free   :: [Type]) (bound  :: [Type])
        (ftvars :: [Type]) (btvars :: [Type])
-       (refined :: [Type]) (a :: [Type])
+       (a :: [Type])
        t x
   where
     QF
@@ -119,42 +119,42 @@ data GEx
       -> GEx
            free   '[]
            ftvars '[]
-           refined (SubstSk free refined)
+           a
            t x
     Ex
       :: GEx
            (n :> (g :: kg) ': free)   bound
            (  ()           ': ftvars) btvars
-           refined a'
+           a
            t x
       -> GEx
            free   (V n kg K ': bound)
            ftvars (  ()     ': btvars)
-           refined a'
+           a
            t x
   
     ExG
       :: GEx
            (n :> (g :: kg) ': free)   bound
            (Ty   (g :: kg) ': ftvars) btvars
-           refined a'
+           a
            t x
       -> GEx
            free   (V n kg K     ': bound)
            ftvars (Ty (g :: kg) ': btvars)
-           refined a'
+           a
            t x
 exists
   :: g
   -> GEx
        (n :> g ': free)   bound
        (  ()   ': ftvars) btvars
-       refined a'
+       a
        t x
   -> GEx
        free   (V n Type K ': bound)
        ftvars (  ()       ': btvars)
-       refined a'
+       a
        t x
 exists _ = Ex
 
@@ -164,12 +164,12 @@ exists_
   -> GEx
        (n :> g ': free)   bound
        (  ()   ': ftvars) btvars
-       refined a'
+       a
        t x
   -> GEx
        free   (V n kg K ': bound)
        ftvars (  ()     ': btvars)
-       refined a'
+       a
        t x
 exists_ _ = Ex
 
@@ -179,12 +179,12 @@ existsG
   -> GEx
        (n :> g ': free) bound
        (Ty g ': ftvars) btvars
-       refined a'
+       a
        t x
   -> GEx
        free (V n Type K ': bound)
        ftvars (Ty g ': btvars)
-       refined a'
+       a
        t x
 existsG _ = ExG
 
@@ -194,11 +194,11 @@ existsG_
   -> GEx
        (n :> g ': free) bound
        (Ty g ': ftvars) btvars
-       refined a'
+       a
        t x
   -> GEx
        free (V n kg K ': bound)
        ftvars (Ty g ': btvars)
-       refined a'
+       a
        t x
 existsG_ _ = ExG

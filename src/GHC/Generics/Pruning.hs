@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -33,98 +35,99 @@ import GHC.TypeLits (Symbol)
 -- | Pruning of unreachable summands from a Generic representation.
 --   This makes sense when working with GADTs, since knowing a specific
 --   type may make summands impossible to pattern match.
-class GPruning (rep :: k -> Type) where
-    type Pruned rep :: k -> Type
+class GPruning (a :: [Type]) (rep :: k -> Type) where
+    type Pruned a rep :: k -> Type
 
-    gprune  :: rep x -> Pruned rep x
-    gextend :: Pruned rep x -> rep x
+    gprune  :: Proxy a -> rep x -> Pruned a rep x
+    gextend :: Proxy a -> Pruned a rep x -> rep x
 
 
-instance GPruning V1 where
-    type Pruned V1 = V1
+instance GPruning a V1 where
+    type Pruned a V1 = V1
 
-    gprune  = \case
-    gextend = \case
+    gprune  _ = \case
+    gextend _ = \case
 
-instance GPruning U1 where
-    type Pruned U1 = U1
+instance GPruning a U1 where
+    type Pruned a U1 = U1
 
-    gprune  = id
-    gextend = id
+    gprune  _ = id
+    gextend _ = id
 
-instance GPruning (K1 r a) where
-    type Pruned (K1 r a) = K1 r a
+instance GPruning a (K1 r x) where
+    type Pruned a (K1 r x) = K1 r x
 
-    gprune  = id
-    gextend = id
+    gprune  _ = id
+    gextend _ = id
 
-instance GPruning (l :*: r) where
-    type Pruned (l :*: r) = l :*: r
+instance GPruning a (l :*: r) where
+    type Pruned a (l :*: r) = l :*: r
 
-    gprune  = id
-    gextend = id
+    gprune  _ = id
+    gextend _ = id
 
-instance (GPruning t, PruneM1If (Pruned t == V1)) => GPruning (M1 i c t) where
-    type Pruned (M1 i c t) = PrunedM1 (Pruned t == V1) i c (Pruned t)
+instance (GPruning a t, PruneM1If (Pruned a t == V1)) => GPruning a (M1 i c t) where
+    type Pruned a (M1 i c t) = PrunedM1 (Pruned a t == V1) i c (Pruned a t)
 
-    gprune  = pruneM1  (Proxy :: Proxy (Pruned t == V1))
-    gextend = extendM1 (Proxy :: Proxy (Pruned t == V1))
-
-instance
-  ( GPruning l
-  , GPruning r
-  , PruneSummands (ReachableSummands (Pruned l) (Pruned r))
-  ) => GPruning (l :+: r) where
-    type Pruned (l :+: r) = PrunedSummands (ReachableSummands (Pruned l) (Pruned r)) (Pruned l) (Pruned r)
-
-    gprune  = pruneSummands  (Proxy :: Proxy (ReachableSummands (Pruned l) (Pruned r)))
-    gextend = extendSummands (Proxy :: Proxy (ReachableSummands (Pruned l) (Pruned r)))
+    gprune  = pruneM1  (Proxy :: Proxy (Pruned a t == V1))
+    gextend = extendM1 (Proxy :: Proxy (Pruned a t == V1))
 
 instance
-  PruneGExIfNot (Unifies refined a)
-    => GPruning (GEx free bound ftvars btvars refined a t) where
+  ( GPruning a l
+  , GPruning a r
+  , PruneSummands (ReachableSummands (Pruned a l) (Pruned a r))
+  ) => GPruning a (l :+: r) where
+    type Pruned a (l :+: r) = PrunedSummands (ReachableSummands (Pruned a l) (Pruned a r)) (Pruned a l) (Pruned a r)
 
-    type Pruned (GEx free bound ftvars btvars refined a t)
-      = PrunedIfNot (Unifies refined a) free bound ftvars btvars refined a t
+    gprune  = pruneSummands  (Proxy :: Proxy (ReachableSummands (Pruned a l) (Pruned a r)))
+    gextend = extendSummands (Proxy :: Proxy (ReachableSummands (Pruned a l) (Pruned a r)))
 
-    gprune  = pruneGEx  (Proxy :: Proxy (Unifies refined a))
-    gextend = extendGEx (Proxy :: Proxy (Unifies refined a))
+instance
+  PruneGExIfNot (Unifies a' a)
+    => GPruning a (GEx free bound ftvars btvars a' t) where
 
+    type Pruned a (GEx free bound ftvars btvars a' t)
+      = PrunedIfNot (Unifies a' a) free bound ftvars btvars a' t
+
+    gprune  = pruneGEx  (Proxy :: Proxy (Unifies a' a))
+    gextend = extendGEx (Proxy :: Proxy (Unifies a' a))
 
 -- ----------------------------------------------------------------------------
 -- Prune metadata
 -- ----------------------------------------------------------------------------
 
 class PruneM1If (b :: Bool) where
-  type PrunedM1  b i (c :: Meta) (rep :: k -> Type) :: k -> Type
+  type PrunedM1 b i (c :: Meta) (rep :: k -> Type) :: k -> Type
 
   pruneM1
-    :: ( b ~ (Pruned rep == V1)
-       , GPruning rep
+    :: ( b ~ (Pruned a rep == V1)
+       , GPruning a rep
        )
     => Proxy b
+    -> Proxy a
     -> M1 i c rep x
-    -> PrunedM1 b i c (Pruned rep) x
+    -> PrunedM1 b i c (Pruned a rep) x
 
   extendM1
-    :: ( b ~ (Pruned rep == V1)
-       , GPruning rep
+    :: ( b ~ (Pruned a rep == V1)
+       , GPruning a rep
        )
     => Proxy b
-    -> PrunedM1 b i c (Pruned rep) x
+    -> Proxy a
+    -> PrunedM1 b i c (Pruned a rep) x
     -> M1 i c rep x
 
 instance PruneM1If 'True where
     type PrunedM1 'True i c rep = V1
 
-    pruneM1  _ (M1 rep) = case gprune rep of _ -> error "pruneM1: impossible -- V1"
-    extendM1 _ = \case
+    pruneM1  _ pa (M1 rep) = case gprune pa rep of _ -> error "pruneM1: impossible -- V1"
+    extendM1 _ _ = \case
 
 instance PruneM1If 'False where
     type PrunedM1 'False i c rep = M1 i c rep
 
-    pruneM1  _ (M1 rep)  = M1 (gprune rep)
-    extendM1 _ (M1 prep) = M1 (gextend prep)
+    pruneM1  _ pa (M1 rep)  = M1 (gprune  pa rep)
+    extendM1 _ pa (M1 prep) = M1 (gextend pa prep)
 
 
 -- ----------------------------------------------------------------------------
@@ -148,21 +151,23 @@ class PruneSummands (s :: Summands) where
     type PrunedSummands s (l :: k -> Type) (r :: k -> Type) :: k -> Type
 
     pruneSummands
-      :: ( s ~ ReachableSummands (Pruned l) (Pruned r)
-         , GPruning l
-         , GPruning r
+      :: ( s ~ ReachableSummands (Pruned a l) (Pruned a r)
+         , GPruning a l
+         , GPruning a r
          )
       => Proxy s
+      -> Proxy a
       -> (l :+: r) x
-      -> PrunedSummands s (Pruned l) (Pruned r) x
+      -> PrunedSummands s (Pruned a l) (Pruned a r) x
 
     extendSummands
-      :: ( s ~ ReachableSummands (Pruned l) (Pruned r)
-         , GPruning l
-         , GPruning r
+      :: ( s ~ ReachableSummands (Pruned a l) (Pruned a r)
+         , GPruning a l
+         , GPruning a r
          )
       => Proxy s
-      -> PrunedSummands s (Pruned l) (Pruned r) x
+      -> Proxy a
+      -> PrunedSummands s (Pruned a l) (Pruned a r) x
       -> (l :+: r) x
 
 
@@ -170,38 +175,38 @@ class PruneSummands (s :: Summands) where
 instance PruneSummands 'NoSummand where
     type PrunedSummands 'NoSummand l r = V1
 
-    pruneSummands  _ = error "pruneSummands: impossible -- no summands"
-    extendSummands _ = \case
+    pruneSummands  _ _ = error "pruneSummands: impossible -- no summands"
+    extendSummands _ _ = \case
 
 instance PruneSummands 'LeftSummand where
     type PrunedSummands 'LeftSummand l r = l
 
-    pruneSummands _ = \case
-      L1 l -> gprune l
+    pruneSummands _ pa = \case
+      L1 l -> gprune pa l
       _    -> error "pruneSummands: impossible -- no right summand"
 
-    extendSummands _ = L1 . gextend
+    extendSummands _ pa = L1 . gextend pa
 
 instance PruneSummands 'RightSummand where
     type PrunedSummands 'RightSummand l r = r
 
-    pruneSummands _ = \case
-      R1 r -> gprune r
+    pruneSummands _ pa = \case
+      R1 r -> gprune pa r
       _    -> error "pruneSummands: impossible -- no left summand"
 
-    extendSummands _ = R1 . gextend
+    extendSummands _ pa = R1 . gextend pa
 
 
 instance PruneSummands 'BothSummands where
     type PrunedSummands 'BothSummands l r = l :+: r
 
-    pruneSummands  _ = \case
-      L1 l -> L1 $ gprune l
-      R1 r -> R1 $ gprune r
+    pruneSummands  _ pa = \case
+      L1 l -> L1 $ gprune pa l
+      R1 r -> R1 $ gprune pa r
 
-    extendSummands _ = \case
-      L1 pl -> L1 $ gextend pl
-      R1 pr -> R1 $ gextend pr
+    extendSummands _ pa = \case
+      L1 pl -> L1 $ gextend pa pl
+      R1 pr -> R1 $ gextend pa pr
 
 
 
@@ -213,37 +218,38 @@ class PruneGExIfNot (b :: Bool) where
   type PrunedIfNot b
          (free    :: [Type]) (bound  :: [Type])
          (ftvars  :: [Type]) (btvars :: [Type])
-         (refined :: [Type]) (a      :: [Type])
+         (a'      :: [Type])
          (t :: k -> Type)
     :: k -> Type
 
   pruneGEx
-    :: b ~ Unifies refined a
+    :: b ~ Unifies a' a
     => Proxy b
-    -> GEx free bound ftvars btvars refined a t x
-    -> PrunedIfNot b free bound ftvars btvars refined a t x
+    -> Proxy a
+    -> GEx free bound ftvars btvars a' t x
+    -> PrunedIfNot b free bound ftvars btvars a' t x
 
   extendGEx
-    :: b ~ Unifies refined a
+    :: b ~ Unifies a' a
     => Proxy b
-    -> PrunedIfNot b free bound ftvars btvars refined a t x
-    -> GEx free bound ftvars btvars refined a t x
+    -> Proxy a
+    -> PrunedIfNot b free bound ftvars btvars a' t x
+    -> GEx free bound ftvars btvars a' t x
 
 instance PruneGExIfNot 'True where
-   type PrunedIfNot 'True free bound ftvars btvars refined a t
-     = GEx free bound ftvars btvars refined a t
+   type PrunedIfNot 'True free bound ftvars btvars a' t
+     = GEx free bound ftvars btvars a' t
 
+   pruneGEx  _ _ = id
+   extendGEx _ _ = id
 
-
-   pruneGEx  _ = id
-   extendGEx _ = id
 
 instance PruneGExIfNot 'False where
-    type PrunedIfNot 'False free bound ftvars btvars refined a t
+    type PrunedIfNot 'False free bound ftvars btvars a' t
       = V1
 
-    pruneGEx  _ = error "pruneGEx: impossible, types don't unify"
-    extendGEx _ = \case
+    pruneGEx  _ _ = error "pruneGEx: impossible, types don't unify"
+    extendGEx _ _ = \case
 
 
 -- ----------------------------------------------------------------------------
@@ -251,17 +257,17 @@ instance PruneGExIfNot 'False where
 -- ----------------------------------------------------------------------------
 
 
-type Unifies (refined :: k) (a :: k)
-  = Fst (Unify refined a)
+type Unifies (a' :: k) (a :: k)
+  = Fst (Unify a' a)
 
 type family Fst (pair :: (k, k')) :: k where
   Fst '(a, b) = a
 
 
-type Unify (refined :: k) (a :: k)
-  = Unify' '( 'True, '[] ) refined a
+type Unify (a' :: k) (a :: k)
+  = Unify' '( 'True, '[] ) a' a
 
-type family Unify' (state :: (Bool, [Type])) (refined :: k) (a :: k) :: (Bool , [Type]) where
+type family Unify' (state :: (Bool, [Type])) (a' :: k) (a :: k) :: (Bool , [Type]) where
   Unify' '( 'False, assign) _ _ = '( 'False, assign)
   Unify' '(_, assign) (Sk n :: k) (a :: k) = UnifyVar assign n a
   Unify' accum (f x) (f' x') = Unify' (Unify' accum f f') x x'

@@ -48,18 +48,22 @@ instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
 instance Generic (Vector n a) where
     type Rep (Vector n a)
        = D1 ('MetaData "Vector" "Vector" "package-name" 'False)
-           (GADT
+           (GADT '[Ty n, Ty a]
              (
                (C1 ('MetaCons "VecZ" 'PrefixI 'False)
                  (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                   (G '["a" :> a] '[] '[Ty 'Z, Ty (Sk "a" :: Type)] '[Ty n, Ty a] U1)
+                   (G '["n" :> n, "a" :> a] '[] '[Ty 'Z, Ty (Sk "a" :: Type)] '[Ty n, Ty a]
+                     (Sk "n" ~ 'Z :=>: U1)
+                   )
                  )
                )
              :+:
                (C1 ('MetaCons "VecS" 'PrefixI 'False)
                  (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                   (G '["a" :> a] '[V "n" Peano K] '[Ty ('Succ (Sk "n")), Ty (Sk "a" :: Type)] '[Ty n, Ty a]
-                     (K1 R (Sk "a") :*: K1 R (Vector (Sk "n") (Sk "a")))
+                   (G '["n" :> n, "a" :> a] '[V "n'" Peano K] '[Ty ('Succ (Sk "n'")), Ty (Sk "a" :: Type)] '[Ty n, Ty a]
+                     (Sk "n" ~ 'Succ (Sk "n'") :=>:
+                       (K1 R (Sk "a") :*: K1 R (Vector (Sk "n'") (Sk "a")))
+                     )
                    )
                  )
                )
@@ -68,15 +72,15 @@ instance Generic (Vector n a) where
 
     from = \case
       VecZ
-        -> M1 $ GADT $ L1 $ M1 $ M1 $ QF U1
+        -> M1 $ GADT $ L1 $ M1 $ M1 $ QF $ Ct U1
 
       VecS a vn
         -> M1 $ GADT $ R1 $ M1 $ M1 $
-             existsG_ (unapplyR $ unapplyL $ pure vn) $ QF $ K1 a :*: K1 vn
+             existsG_ (unapplyR $ unapplyL $ pure vn) $ QF $ Ct $ K1 a :*: K1 vn
 
     to = \case
-      M1 (GADT (L1 (M1 (M1 (QF U1))))) -> VecZ
-      M1 (GADT (R1 (M1 (M1 (ExG (QF (K1 a :*: K1 vn))))))) -> VecS a vn
+      M1 (GADT (L1 (M1 (M1 (QF (Ct U1)))))) -> VecZ
+      M1 (GADT (R1 (M1 (M1 (ExG (QF (Ct (K1 a :*: K1 vn)))))))) -> VecS a vn
 
 
 
