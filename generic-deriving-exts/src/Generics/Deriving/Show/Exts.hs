@@ -8,9 +8,9 @@ import Generics.Deriving.Show
 
 import GHC.Generics.Exts
 
-instance GShow' t => GShow' (GADT a t) where
-  gshowsPrec' ty n (GADT t) = gshowsPrec' ty n t
-  isNullary (GADT t) = isNullary t
+instance GShow' t => GShow' (GM1 i a t) where
+  gshowsPrec' ty n (GM1 t) = gshowsPrec' ty n t
+  isNullary (GM1 t) = isNullary t
 
 instance (c => GShow' t) => GShow' (c :=>: t) where
   gshowsPrec' ty n (Ct t) = gshowsPrec' ty n t

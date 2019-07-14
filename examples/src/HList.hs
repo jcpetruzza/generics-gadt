@@ -42,7 +42,7 @@ updateCt = \case
 instance Generic (HList c a) where
   type Rep (HList c a)
     = D1 ('MetaData "HList" "HList" "package-name" 'False)
-        (GADT '[Ty a]
+        (GD1 '[Ty a]
           (
             (C1 ('MetaCons "HNil" 'PrefixI 'False)
               (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
@@ -72,17 +72,17 @@ instance Generic (HList c a) where
 
   from = \case
     HNil
-      -> M1 $ GADT $ L1 $ M1 $ M1 $ QF $ Ct $ U1
+      -> M1 $ GM1 $ L1 $ M1 $ M1 $ QF $ Ct $ U1
 
     HCons t hts
       ->
         let proxy_ts = snd $ unApply $ pure hts
-        in M1 $ GADT $ R1 $ M1 $ M1 $
+        in M1 $ GM1 $ R1 $ M1 $ M1 $
              existsG t $ existsG_ proxy_ts $ QF $ Ct $ Ct $ K1 t :*: K1 hts
 
   to = \case
-    M1 (GADT (L1 (M1 (M1 (QF (Ct U1)))))) -> HNil
-    M1 (GADT (R1 (M1 (M1 (ExG (ExG (QF (Ct (Ct (K1 t :*: K1 hts)))))))))) -> HCons t hts
+    M1 (GM1 (L1 (M1 (M1 (QF (Ct U1)))))) -> HNil
+    M1 (GM1 (R1 (M1 (M1 (ExG (ExG (QF (Ct (Ct (K1 t :*: K1 hts)))))))))) -> HCons t hts
 
 
 unApply :: Proxy (f a) -> (Proxy f, Proxy a)

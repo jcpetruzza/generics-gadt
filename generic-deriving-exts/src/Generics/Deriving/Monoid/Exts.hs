@@ -12,9 +12,9 @@ import Generics.Deriving.Monoid
 import GHC.Generics.Exts
 import GHC.Generics.Pruning
 
-instance (GPruning a t, GMonoid' (Pruned a t)) => GMonoid' (GADT a t) where
-  gmempty' = GADT $ gextend (Proxy :: Proxy a) gmempty'
-  gmappend' (GADT l) (GADT r) = GADT $ gextend pa $ gmappend' (gprune pa l) (gprune pa r)
+instance (GPruning a t, GMonoid' (Pruned a t)) => GMonoid' (GD1 a t) where
+  gmempty' = GM1 $ gextend (Proxy :: Proxy a) gmempty'
+  gmappend' (GM1 l) (GM1 r) = GM1 $ gextend pa $ gmappend' (gprune pa l) (gprune pa r)
     where pa = Proxy :: Proxy a
 
 instance (c, c => GMonoid' t) => GMonoid' (c :=>: t) where

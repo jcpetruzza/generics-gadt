@@ -8,8 +8,8 @@ import Generics.Deriving.Eq
 
 import GHC.Generics.Exts
 
-instance GEq' t => GEq' (GADT a t) where
-  geq' (GADT l) (GADT r) = geq' l r
+instance GEq' t => GEq' (GM1 i a t) where
+  geq' (GM1 l) (GM1 r) = geq' l r
 
 instance (c => GEq' t) => GEq' (c :=>: t) where
   geq' (Ct l) (Ct r) = geq' l r

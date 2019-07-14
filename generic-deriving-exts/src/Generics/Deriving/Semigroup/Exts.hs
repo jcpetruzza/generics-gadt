@@ -12,8 +12,8 @@ import Generics.Deriving.Semigroup
 import GHC.Generics.Exts
 import GHC.Generics.Pruning
 
-instance (GPruning a t, GSemigroup' (Pruned a t)) => GSemigroup' (GADT a t) where
-  gsappend' (GADT l) (GADT r) = GADT $ gextend (Proxy :: Proxy a) $ gsappend' (gprune (Proxy :: Proxy a) l) (gprune (Proxy :: Proxy a) r)
+instance (GPruning a t, GSemigroup' (Pruned a t)) => GSemigroup' (GD1 a t) where
+  gsappend' (GM1 l) (GM1 r) = GM1 $ gextend (Proxy :: Proxy a) $ gsappend' (gprune (Proxy :: Proxy a) l) (gprune (Proxy :: Proxy a) r)
 
 instance (c => GSemigroup' t) => GSemigroup' (c :=>: t) where
   gsappend' (Ct l) (Ct r) = Ct (gsappend' l r)

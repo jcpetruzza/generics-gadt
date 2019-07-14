@@ -3,7 +3,7 @@
 module GHC.Generics.Exts
   (
     (:=>:)(..)
-  , GADT(..)
+  , GM1(..), GD1
   , G, Ex
   , GEx(..)
   , exists, exists_
@@ -16,6 +16,7 @@ module GHC.Generics.Exts
 where
 
 import Data.Kind ( Constraint, Type )
+import GHC.Generics ( D )
 import GHC.TypeLits ( Symbol )
 
 
@@ -94,10 +95,13 @@ type family NoTVars (bound :: [Type]) :: [Type] where
   NoTVars '[] = '[]
   NoTVars (_ ': xs) = () ': NoTVars xs
 
--- | Metadata marking a type as a GADT.
-newtype GADT (a :: [Type]) (f :: k -> Type) (p :: k)
-  = GADT (f p)
+-- | Meta-information about GADT type-arguments (both on type and on constructors)
+newtype GM1 (i :: Type) (c :: [Type]) (f :: k -> Type) (p :: k)
+  = GM1 { unGM1 :: f p }
   deriving (Read, Show, Eq, Ord) -- XXX missing instances
+
+-- | Type synonym for enconding meta-information about a GADT type argument
+type GD1 = GM1 D
 
 -- | Existential type
 type Ex free bound

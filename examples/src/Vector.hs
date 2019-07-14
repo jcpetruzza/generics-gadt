@@ -48,7 +48,7 @@ instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
 instance Generic (Vector n a) where
     type Rep (Vector n a)
        = D1 ('MetaData "Vector" "Vector" "package-name" 'False)
-           (GADT '[Ty n, Ty a]
+           (GD1 '[Ty n, Ty a]
              (
                (C1 ('MetaCons "VecZ" 'PrefixI 'False)
                  (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
@@ -72,15 +72,15 @@ instance Generic (Vector n a) where
 
     from = \case
       VecZ
-        -> M1 $ GADT $ L1 $ M1 $ M1 $ QF $ Ct U1
+        -> M1 $ GM1 $ L1 $ M1 $ M1 $ QF $ Ct U1
 
       VecS a vn
-        -> M1 $ GADT $ R1 $ M1 $ M1 $
+        -> M1 $ GM1 $ R1 $ M1 $ M1 $
              existsG_ (unapplyR $ unapplyL $ pure vn) $ QF $ Ct $ K1 a :*: K1 vn
 
     to = \case
-      M1 (GADT (L1 (M1 (M1 (QF (Ct U1)))))) -> VecZ
-      M1 (GADT (R1 (M1 (M1 (ExG (QF (Ct (K1 a :*: K1 vn)))))))) -> VecS a vn
+      M1 (GM1 (L1 (M1 (M1 (QF (Ct U1)))))) -> VecZ
+      M1 (GM1 (R1 (M1 (M1 (ExG (QF (Ct (K1 a :*: K1 vn)))))))) -> VecS a vn
 
 
 
