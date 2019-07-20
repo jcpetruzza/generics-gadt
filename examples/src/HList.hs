@@ -7,7 +7,6 @@ module HList
   ) where
 
 import Data.Kind ( Constraint, Type )
-import Data.Proxy ( Proxy(..)  )
 
 import Generics.Deriving.Exts ()
 import Generics.Deriving.Eq ( GEq(..) )
@@ -47,7 +46,7 @@ instance Generic (HList c a) where
             (C1 ('MetaCons "HNil" 'PrefixI 'False)
               (GC1 '[Ty ('[] :: [Type])]
                 (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                  (G '["a" :> a, "c" :> c] '[] '[Ty ('[] :: [Type])] '[Ty a]
+                  (QF '["a" :> a, "c" :> c]
                     ('[] ~ (Sk "a" :: [Type]) :=>: U1)
                   )
                 )
@@ -57,14 +56,15 @@ instance Generic (HList c a) where
             (C1 ('MetaCons "HCons" 'PrefixI 'False)
               (GC1 '[Ty ((Sk "t" :: Type) ': Sk "ts")]
                 (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                  (G '["a" :> a, "c" :> c] '[V "t" Type K, V "ts" [Type] K] '[Ty ((Sk "t" :: Type) ': Sk "ts")] '[Ty a]
-                    (
-                      ( ((Sk "t" :: Type) ': Sk "ts") ~ (Sk "a")
-                          :=>:
-                            ( (Sk "c" :: Type -> Constraint) (Sk "t")
-                                :=>: (K1 R (Sk "t") :*: K1 R (HList (Sk "c" :: Type -> Constraint) (Sk "ts")))
-                            )
-                      )
+                  (Let "t" (Sel Type (Lp (Rp Hp)) a)
+                    (Let "ts" (Sel [Type] (Rp Hp) a)
+                       QF
+                    )
+                    '["a" :> a, "c" :> c]
+                    ( (((Sk "t" :: Type) ': (Sk "ts" :: [Type])) ~ Sk "a")
+                        :=>:
+                          ((Sk "c" :: Type -> Constraint) (Sk "t"))
+                               :=>: (K1 R (Sk "t") :*: K1 R (HList (Sk "c" :: Type -> Constraint) (Sk "ts")))
                     )
                   )
                 )
@@ -76,18 +76,14 @@ instance Generic (HList c a) where
 
   from = \case
     HNil
-      -> M1 $ GM1 $ L1 $ M1 $ GM1 $ M1 $ QF $ Ct $ U1
+      -> M1 $ GM1 $ L1 $ M1 $ GM1 $ M1 $
+           QF $ Ct $ U1
 
     HCons t hts
-      ->
-        let proxy_ts = snd $ unApply $ pure hts
-        in M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
-             existsG t $ existsG_ proxy_ts $ QF $ Ct $ Ct $ K1 t :*: K1 hts
+      -> M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
+           Let $ Let $ QF $ Ct $ Ct $ K1 t :*: K1 hts
 
   to = \case
     M1 (GM1 (L1 (M1 (GM1 (M1 (QF (Ct U1))))))) -> HNil
-    M1 (GM1 (R1 (M1 (GM1 (M1 (ExG (ExG (QF (Ct (Ct (K1 t :*: K1 hts))))))))))) -> HCons t hts
+    M1 (GM1 (R1 (M1 (GM1 (M1 (Let (Let (QF (Ct (Ct (K1 t :*: K1 hts))))))))))) -> HCons t hts
 
-
-unApply :: Proxy (f a) -> (Proxy f, Proxy a)
-unApply Proxy = (Proxy, Proxy)

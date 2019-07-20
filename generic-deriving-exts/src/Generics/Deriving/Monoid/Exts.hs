@@ -21,19 +21,15 @@ instance GMonoid' t => GMonoid' (GC1 a t) where
   gmempty' = GM1 gmempty'
   gmappend' (GM1 l) (GM1 r) = GM1 $ gmappend' l r
 
-instance (c, c => GMonoid' t) => GMonoid' (c :=>: t) where
+instance (c, GMonoid' t) => GMonoid' (c :=>: t) where
   gmempty' = Ct gmempty'
   gmappend' (Ct l) (Ct r) = Ct (gmappend' l r)
 
 
-instance (GMonoid' (SubstSk free t)) => GMonoid' (GEx free '[] ftvars '[] t) where
+instance GMonoid' (SubstSk free t) => GMonoid' (QF free t) where
   gmempty' = QF gmempty'
   gmappend' (QF l) (QF r) = QF (gmappend' l r)
 
-
-instance
-  ( GMonoid' (GEx (x :> (v :: k) ': free) bound (Ty v ': ftvars) btvars t)
-  ) => GMonoid' (GEx free (V x k K ': bound) ftvars (Ty v ': btvars) t) where
-  gmempty' = ExG gmempty'
-  gmappend' (ExG l) (ExG r) = ExG (gmappend' l r)
-
+instance GMonoid' (sf (n :> vn ': free) t) => GMonoid' (Let n vn sf free t) where
+  gmempty' = Let gmempty'
+  gmappend' (Let l) (Let r) = Let (gmappend' l r)

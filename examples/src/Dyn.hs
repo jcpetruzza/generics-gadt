@@ -31,14 +31,14 @@ instance Generic (Dyn c) where
     = D1 ('MetaData "Dyn" "Main" "package-name" 'False)
        (C1 ('MetaCons "Dyn" 'PrefixI 'False)
          (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-            (Ex '["c" :> c] '[V "a" Type K]
+            (Ex "a" Type QF '["c" :> c]
               ((Sk "c") (Sk "a" :: *) :=>: (K1 R (Sk "a")))
             )
          )
        )
 
   from (Dyn a)
-    =  M1 $ M1 $ M1 $ exists a $ QF $ Ct $ K1 a
+    =  M1 $ M1 $ M1 $ Ex $ QF $ Ct $ K1 a
 
   to (M1 (M1 (M1 (Ex (QF (Ct (K1 a)))))))
     = Dyn a

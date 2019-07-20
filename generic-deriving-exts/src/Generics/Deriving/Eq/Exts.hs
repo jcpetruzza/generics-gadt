@@ -15,11 +15,8 @@ instance (c => GEq' t) => GEq' (c :=>: t) where
   geq' (Ct l) (Ct r) = geq' l r
 
 
-instance GEq' (SubstSk free t) => GEq' (GEx free '[] ftvars btvars t) where
+instance GEq' (SubstSk free t) => GEq' (QF free t) where
   geq' (QF l) (QF r) = geq' l r
 
-instance
-  ( GEq' (GEx (x :> v ': free) bound (Ty v ': ftvars) btvars t)
-  ) => GEq' (GEx free (V x k K ': bound) ftvars (Ty v ': btvars) t) where
-  geq' (ExG l) (ExG r) = geq' l r
-
+instance GEq' (sf (n :> vn ': free) t) => GEq' (Let n vn sf free t) where
+  geq' (Let l) (Let r) = geq' l r

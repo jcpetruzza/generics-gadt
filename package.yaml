@@ -27,6 +27,7 @@ default-extensions:
 - LambdaCase
 - PolyKinds
 - TypeFamilies
+- TypeOperators
 
 ghc-options:
 - -Wall

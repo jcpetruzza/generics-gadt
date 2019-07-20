@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2f338db04966ea207f32b7befd33375dfe62630904165f83c4368a09f9ae92b2
+-- hash: c43f4c4de88423197dbf90e6b96d1b980fde777e9c85bffdeb6ffe57831be265
 
 name:           generics-gadt
 version:        0.0.0.0
@@ -35,7 +35,7 @@ library
       Paths_generics_gadt
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds EmptyCase GADTs LambdaCase PolyKinds TypeFamilies
+  default-extensions: ConstraintKinds DataKinds EmptyCase GADTs LambdaCase PolyKinds TypeFamilies TypeOperators
   ghc-options: -Wall -Werror
   build-depends:
       base >=4.7

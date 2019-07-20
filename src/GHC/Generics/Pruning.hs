@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module GHC.Generics.Pruning
   ( GPruning(..)
@@ -54,14 +53,26 @@ instance GPruning a U1 where
     gprune  _ = id
     gextend _ = id
 
-instance GPruning a (K1 r x) where
-    type Pruned a (K1 r x) = K1 r x
+instance GPruning a (K1 r t) where
+    type Pruned a (K1 r t) = K1 r t
 
     gprune  _ = id
     gextend _ = id
 
-instance GPruning a (GEx free bound ftvars btvars t) where
-    type Pruned a (GEx free bound ftvars btvars t) = GEx free bound ftvars btvars t
+instance GPruning a (QF free t) where
+    type Pruned a (QF free t) = QF free t
+
+    gprune  _ = id
+    gextend _ = id
+
+instance GPruning a (Let n vn sf free t) where
+    type Pruned a (Let n vn sf free t) = Let n vn sf free t
+
+    gprune  _ = id
+    gextend _ = id
+
+instance GPruning a (Ex n kvn sf free t) where
+    type Pruned a (Ex n kvn sf free t) = Ex n kvn sf free t
 
     gprune  _ = id
     gextend _ = id

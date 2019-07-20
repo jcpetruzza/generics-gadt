@@ -4,7 +4,6 @@ module Vector
   ) where
 
 import Data.Kind ( Type  )
-import Data.Proxy
 
 import GHC.Generics
 import GHC.Generics.Exts
@@ -53,7 +52,7 @@ instance Generic (Vector n a) where
                (C1 ('MetaCons "VecZ" 'PrefixI 'False)
                  (GC1 '[Ty 'Z, Ty (Sk "a" :: Type)]
                    (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                     (G '["n" :> n, "a" :> a] '[] '[Ty 'Z, Ty (Sk "a" :: Type)] '[Ty n, Ty a]
+                     (QF '["n" :> n, "a" :> a]
                        (Sk "n" ~ 'Z :=>: U1)
                      )
                    )
@@ -63,7 +62,7 @@ instance Generic (Vector n a) where
                (C1 ('MetaCons "VecS" 'PrefixI 'False)
                  (GC1 '[Ty ('Succ (Sk "n'")), Ty (Sk "a" :: Type)] 
                    (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                     (G '["n" :> n, "a" :> a] '[V "n'" Peano K] '[Ty ('Succ (Sk "n'")), Ty (Sk "a" :: Type)] '[Ty n, Ty a]
+                     (Let "n'" (Sel Peano (Rp Hp) n) QF '["n" :> n, "a" :> a]
                        (Sk "n" ~ 'Succ (Sk "n'") :=>:
                          (K1 R (Sk "a") :*: K1 R (Vector (Sk "n'") (Sk "a")))
                        )
@@ -80,17 +79,8 @@ instance Generic (Vector n a) where
 
       VecS a vn
         -> M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
-             existsG_ (unapplyR $ unapplyL $ pure vn) $ QF $ Ct $ K1 a :*: K1 vn
+             Let $ QF $ Ct $ K1 a :*: K1 vn
 
     to = \case
       M1 (GM1 (L1 (M1 (GM1 (M1 (QF (Ct U1))))))) -> VecZ
-      M1 (GM1 (R1 (M1 (GM1 (M1 (ExG (QF (Ct (K1 a :*: K1 vn))))))))) -> VecS a vn
-
-
-
-
-unapplyL :: Proxy (f a) -> Proxy f
-unapplyL Proxy = Proxy
-
-unapplyR :: Proxy (f a) -> Proxy a
-unapplyR Proxy = Proxy
+      M1 (GM1 (R1 (M1 (GM1 (M1 (Let (QF (Ct (K1 a :*: K1 vn))))))))) -> VecS a vn
