@@ -16,18 +16,23 @@ import Generics.Deriving.Show ( GShow(..) )
 
 import GHC.Generics
 import GHC.Generics.Exts
+import GHC.Generics.Pruning
 
 
 data HList c a where
   HNil :: HList c '[]
   HCons :: c t => t -> HList c ts -> HList c (t ': ts)
 
-instance GShow (HList GShow a)
-instance GEq (HList GEq a)
-instance GSemigroup (HList c '[])
-instance GSemigroup (HList GSemigroup as) => GSemigroup (HList GSemigroup (a ': as))
-instance GMonoid (HList c '[])
-instance (GMonoid a, GMonoid (HList GMonoid as)) => GMonoid (HList GMonoid (a ': as))
+instance c ~ GEq => GEq (HList c a)
+instance c ~ GShow => GShow (HList c a)
+
+deriving via (Pruning (HList c '[])) instance GSemigroup (HList c '[])
+deriving via (Pruning (HList c (a ': as))) instance (GSemigroup a, GSemigroup (HList c as)) => GSemigroup (HList c (a ': as))
+
+
+deriving via (Pruning (HList c '[])) instance GMonoid (HList c '[])
+deriving via (Pruning (HList c (a ': as))) instance (c a, GMonoid a, GMonoid (HList c as)) => GMonoid (HList c (a ': as))
+
 
 type family All (c :: Type -> Constraint) (as :: [Type]) :: Constraint where
     All c '[] = ()
@@ -41,49 +46,38 @@ updateCt = \case
 instance Generic (HList c a) where
   type Rep (HList c a)
     = D1 ('MetaData "HList" "HList" "package-name" 'False)
-        (GD1 '[Ty a]
-          (
-            (C1 ('MetaCons "HNil" 'PrefixI 'False)
-              (GC1 '[Ty ('[] :: [Type])]
-                (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                  (QF '["a" :> a, "c" :> c]
-                    ('[] ~ (Sk "a" :: [Type]) :=>: U1)
-                  )
+        (
+           (C1 ('MetaCons "HNil" 'PrefixI 'False)
+             (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+               (Let a (Let c (Match Type (Exact ('[] :: [Type])) a QF)) 'Grnd
+                  ((Var 2 :: [Type]) ~ '[] :=>: U1)
+               )
+             )
+           )
+        :+:
+            (C1 ('MetaCons "HCons" 'PrefixI 'False)
+              (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+                (Let a (Let c
+                  (Match Type   ((Pat PVar :: Type) ': (Pat PAny)) a
+                  (Match [Type] ((Pat PAny :: Type) ': (Pat PVar)) a QF))) 'Grnd
+                    ( (((Var 1 :: Type) ': (Var 0 :: [Type])) ~ Var 3)
+                        :=>:
+                          ((Var 2 :: Type -> Constraint) (Var 1))
+                               :=>: (K1 R (Var 1 :: Type) :*: K1 R (HList (Var 2 :: Type -> Constraint) (Var 0)))
+                    )
                 )
               )
             )
-          :+:
-            (C1 ('MetaCons "HCons" 'PrefixI 'False)
-              (GC1 '[Ty ((Sk "t" :: Type) ': Sk "ts")]
-                (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                  (Let "t" (Sel Type (Lp (Rp Hp)) a)
-                    (Let "ts" (Sel [Type] (Rp Hp) a)
-                       QF
-                    )
-                    '["a" :> a, "c" :> c]
-                    ( (((Sk "t" :: Type) ': (Sk "ts" :: [Type])) ~ Sk "a")
-                        :=>:
-                          ((Sk "c" :: Type -> Constraint) (Sk "t"))
-                               :=>: (K1 R (Sk "t") :*: K1 R (HList (Sk "c" :: Type -> Constraint) (Sk "ts")))
-                    )
-                  )
-                )
-              )
-           )
-         )
-       )
-
+        )
 
   from = \case
     HNil
-      -> M1 $ GM1 $ L1 $ M1 $ GM1 $ M1 $
-           QF $ Ct $ U1
+      -> M1 $ L1 $ M1 $ M1 $ Let $ Let $ Match $ Let $ QF $ Ct U1
 
     HCons t hts
-      -> M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
-           Let $ Let $ QF $ Ct $ Ct $ K1 t :*: K1 hts
+      -> M1 $ R1 $ M1 $ M1 $
+           Let $ Let $ Match $ Let $ Match $ Let $ QF $ Ct $ Ct (K1 t :*: K1 hts)
 
   to = \case
-    M1 (GM1 (L1 (M1 (GM1 (M1 (QF (Ct U1))))))) -> HNil
-    M1 (GM1 (R1 (M1 (GM1 (M1 (Let (Let (QF (Ct (Ct (K1 t :*: K1 hts))))))))))) -> HCons t hts
-
+    M1 (L1 (M1 (M1 (Let (Let (Match (Let (QF (Ct U1))))))))) -> HNil
+    M1 (R1 (M1 (M1 (Let (Let (Match (Let (Match (Let (QF (Ct (Ct (K1 t :*: K1 hts))))))))))))) -> HCons t hts

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c43f4c4de88423197dbf90e6b96d1b980fde777e9c85bffdeb6ffe57831be265
+-- hash: cfc0d30ce5538d420222d005d2bad78034badbd035f720e3abd05365008525c3
 
 name:           generics-gadt
 version:        0.0.0.0
@@ -30,6 +30,7 @@ source-repository head
 library
   exposed-modules:
       GHC.Generics.Exts
+      GHC.Generics.Matching
       GHC.Generics.Pruning
   other-modules:
       Paths_generics_gadt

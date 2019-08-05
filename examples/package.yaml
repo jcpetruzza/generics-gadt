@@ -22,12 +22,14 @@ dependencies:
 default-extensions:
 - ConstraintKinds
 - DataKinds
+- DerivingVia
 - EmptyCase
 - FlexibleContexts
 - FlexibleInstances
 - GADTs
 - LambdaCase
 - PolyKinds
+- StandaloneDeriving
 - TypeFamilies
 - TypeOperators
 

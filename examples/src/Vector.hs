@@ -7,6 +7,7 @@ import Data.Kind ( Type  )
 
 import GHC.Generics
 import GHC.Generics.Exts
+import GHC.Generics.Pruning
 
 import Generics.Deriving.Exts ()
 import Generics.Deriving.Eq ( GEq(..) )
@@ -39,34 +40,30 @@ data Vector (n :: Peano) (a :: Type) where
 
 instance GShow a => GShow (Vector n a)
 instance GEq a => GEq (Vector n a)
-instance GSemigroup (Vector 'Z a)
-instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
-instance GMonoid (Vector 'Z a)
-instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
+
+deriving via (Pruning (Vector 'Z a)) instance GSemigroup (Vector 'Z a)
+deriving via (Pruning (Vector ('Succ n) a)) instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
+
+deriving via (Pruning (Vector 'Z a)) instance GMonoid (Vector 'Z a)
+deriving via (Pruning (Vector ('Succ n) a)) instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
 
 instance Generic (Vector n a) where
     type Rep (Vector n a)
        = D1 ('MetaData "Vector" "Vector" "package-name" 'False)
-           (GD1 '[Ty n, Ty a]
-             (
-               (C1 ('MetaCons "VecZ" 'PrefixI 'False)
-                 (GC1 '[Ty 'Z, Ty (Sk "a" :: Type)]
-                   (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                     (QF '["n" :> n, "a" :> a]
-                       (Sk "n" ~ 'Z :=>: U1)
-                     )
-                   )
+           (
+             (C1 ('MetaCons "VecZ" 'PrefixI 'False)
+               (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+                 (Let a (Let n (Match Type (Exact 'Z) n QF)) 'Grnd
+                     ((Var 1 ~ 'Z) :=>: U1)
                  )
                )
-             :+:
-               (C1 ('MetaCons "VecS" 'PrefixI 'False)
-                 (GC1 '[Ty ('Succ (Sk "n'")), Ty (Sk "a" :: Type)] 
-                   (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
-                     (Let "n'" (Sel Peano (Rp Hp) n) QF '["n" :> n, "a" :> a]
-                       (Sk "n" ~ 'Succ (Sk "n'") :=>:
-                         (K1 R (Sk "a") :*: K1 R (Vector (Sk "n'") (Sk "a")))
-                       )
-                     )
+             )
+           :+:
+             (C1 ('MetaCons "VecS" 'PrefixI 'False)
+               (S1 ('MetaSel 'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+                 (Let a (Let n (Match Peano ('Succ (Pat PVar)) n QF)) 'Grnd
+                   (Var 1 ~ 'Succ (Var 0) :=>:
+                     (K1 R (Var 2) :*: K1 R (Vector (Var 0) (Var 2)))
                    )
                  )
                )
@@ -75,12 +72,13 @@ instance Generic (Vector n a) where
 
     from = \case
       VecZ
-        -> M1 $ GM1 $ L1 $ M1 $ GM1 $ M1 $ QF $ Ct U1
+        -> M1 $ L1 $ M1 $ M1 $ Let $ Let $ Match $ Let $ QF $ Ct U1
 
       VecS a vn
-        -> M1 $ GM1 $ R1 $ M1 $ GM1 $ M1 $
-             Let $ QF $ Ct $ K1 a :*: K1 vn
+        -> M1 $ R1 $ M1 $ M1 $
+             Let $ Let $ Match $ Let $ QF $ Ct $ K1 a :*: K1 vn
+
 
     to = \case
-      M1 (GM1 (L1 (M1 (GM1 (M1 (QF (Ct U1))))))) -> VecZ
-      M1 (GM1 (R1 (M1 (GM1 (M1 (Let (QF (Ct (K1 a :*: K1 vn))))))))) -> VecS a vn
+      M1 (L1 (M1 (M1 (Let (Let (Match (Let (QF (Ct U1))))))))) -> VecZ
+      M1 (R1 (M1 (M1 (Let (Let (Match (Let (QF (Ct (K1 a :*: K1 vn)))))))))) -> VecS a vn
