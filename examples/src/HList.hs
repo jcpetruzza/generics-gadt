@@ -26,12 +26,18 @@ data HList c a where
 instance c ~ GEq => GEq (HList c a)
 instance c ~ GShow => GShow (HList c a)
 
-deriving via (Pruning (HList c '[])) instance GSemigroup (HList c '[])
-deriving via (Pruning (HList c (a ': as))) instance (GSemigroup a, GSemigroup (HList c as)) => GSemigroup (HList c (a ': as))
+deriving via (Pruning (HList c '[]))
+  instance GSemigroup (HList c '[])
+
+deriving via (Pruning (HList c (a ': as)))
+  instance (GSemigroup a, GSemigroup (HList c as)) => GSemigroup (HList c (a ': as))
 
 
-deriving via (Pruning (HList c '[])) instance GMonoid (HList c '[])
-deriving via (Pruning (HList c (a ': as))) instance (c a, GMonoid a, GMonoid (HList c as)) => GMonoid (HList c (a ': as))
+deriving via (Pruning (HList c '[]))
+  instance GMonoid (HList c '[])
+
+deriving via (Pruning (HList c (a ': as)))
+  instance (c a, GMonoid a, GMonoid (HList c as)) => GMonoid (HList c (a ': as))
 
 
 type family All (c :: Type -> Constraint) (as :: [Type]) :: Constraint where

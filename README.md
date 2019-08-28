@@ -9,7 +9,7 @@ to answer that question in the affirmative.
 ## Does it work?
 
 It is still work in progress, but you can already check the [examples](examples) to see it in action. Here's
-a snippet from the [Vector example](examples/src/Vector.hs): 
+a snippet from the [Vector example](examples/src/Vector.hs):
 
 ```haskell
 data Peano
@@ -19,16 +19,23 @@ data Peano
 data Vector (n :: Peano) (a :: Type) where
     VecZ :: Vector 'Z a
     VecS :: a -> Vector n a -> Vector ('Succ n) a
-    
+
 # manual definition for now
 instance Generic (Vector n a) where  ...
 
 instance GShow a => GShow (Vector n a)
 instance GEq a => GEq (Vector n a)
-instance GSemigroup (Vector 'Z a)
-instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
-instance GMonoid (Vector 'Z a)
-instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
+
+deriving via (Pruning (Vector 'Z a))
+  instance GSemigroup (Vector 'Z a)
+deriving via (Pruning (Vector ('Succ n) a))
+  instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
+
+deriving via (Pruning (Vector 'Z a))
+  instance GMonoid (Vector 'Z a)
+deriving via (Pruning (Vector ('Succ n) a))
+  instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
+
 ```
 
 Here, `GShow`, `GEq`, `GSemigroup` and `GMonoid` come from the
@@ -39,20 +46,37 @@ the types defined in this package.
 Particularly interesting are the `GSemigroup` and `GMonoid` instances, since
 the generic representation of `Vector n a` involves a sum `:*:`, which the generic
 definitions of `GSemigrouop` and `GMonoid` of course can't handle! The trick
-here is that `Vector 'Z a` and `Vector ('S n) a` can both be treated as if they
-had no sums in their representation...
+here is that `Vector 'Z a` and `Vector ('Succ n) a` can both be "pruned" and treated
+as if they had no sums in their representation.
 
 ## How does it work?
 
-We use a GADT to represent existential formulas in prenex normal-form with free-variables.
-The free variables within the type, in combination with the `QuantifiedConstraints` extension
-let us eliminate existentially quantified variables in instance declarations. Moreover, this
-type includes two existential constructors: one for GADT-style existentials, where the
-quantified type appears in the type of the GADT (like `n` in the `VecS` constructor above)
-and one for non-GADT existential-quantification. This allow us, e.g., to get an instance
-`GEq (Vector n a)`: otherwise, after peeling the existential quantifier for `n` the compiler
-wouldn't be able to prove that `n` must be the same both on the left and right hand of the
-`geq` function being defined.
+We use additional types to represent existential types in prenex normal-form with
+free-variables. Variables are represented with a type `Var :: (n :: Nat) -> Type`,
+using de-Bruijn indices.
+
+  - `QF vars t x` is a quantifier-free type `t`, with free variables, given by the
+    assignment `vars` of "type-variables" to types. One needs to substitute all free
+    variables in `t` with the values in `vars`.
+
+  - `Let (a :: ka) vars t x` introduces a new variable, assigning it the value `a`.
+
+  - `Exists ka vars t x` introduces an existentially quantified variable of kind `ka`.
+
+  - `Match km pat a t x`, just like `Exists`, `Match` introduces a new quantified
+    variable, of kind `km`, but the value is uniquely determined from the type `a`
+    by "matching" on a pattern `pat`. This is a convenient way of representing
+    variables in GADTs like `n` in the case of `VecS` in the definition of `Vector k a`
+    above, where `n` can be known from `k`. Knowing that `n` is uniquely defined
+    let us define generic instances for classes like `Eq` or `Semigroup`, where the
+    compiler wouldn't be able to know that the existentially quantified variable
+    must have the same type on both arguments of `(==)` or `(<>)`.
+
+  - `c :=>: t x` encoding of constraints.
+
+
+When writing instances for generic functions, we can rely on the `QuantifiedConstraints`
+extension eliminate the existentially quantified variables in the `Exists` case.
 
 ## Known limitations
 

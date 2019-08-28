@@ -41,11 +41,16 @@ data Vector (n :: Peano) (a :: Type) where
 instance GShow a => GShow (Vector n a)
 instance GEq a => GEq (Vector n a)
 
-deriving via (Pruning (Vector 'Z a)) instance GSemigroup (Vector 'Z a)
-deriving via (Pruning (Vector ('Succ n) a)) instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
+deriving via (Pruning (Vector 'Z a))
+  instance GSemigroup (Vector 'Z a)
 
-deriving via (Pruning (Vector 'Z a)) instance GMonoid (Vector 'Z a)
-deriving via (Pruning (Vector ('Succ n) a)) instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
+deriving via (Pruning (Vector ('Succ n) a))
+  instance (GSemigroup a, GSemigroup (Vector n a)) => GSemigroup (Vector ('Succ n) a)
+
+deriving via (Pruning (Vector 'Z a))
+  instance GMonoid (Vector 'Z a)
+deriving via (Pruning (Vector ('Succ n) a))
+  instance (GMonoid a, GMonoid (Vector n a)) => GMonoid (Vector ('Succ n) a)
 
 instance Generic (Vector n a) where
     type Rep (Vector n a)
